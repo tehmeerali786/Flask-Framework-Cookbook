@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: my-app
+Version: 1.0
+Summary: Hello world application for Flask!
+Author: Tehmeer Ali Paryani
+Author-email: yout email.
+License: GNU General Public License v3
+Platform: any
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v3
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python Programming
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development :: Libraries :: Python Programming Modules
