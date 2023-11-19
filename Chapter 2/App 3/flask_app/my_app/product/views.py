@@ -1,6 +1,9 @@
+from datetime import datetime
 from werkzeug.exceptions import abort
 
-from flask import render_template, request, Blueprint
+from flask import render_template
+from flask import request
+from flask import Blueprint
 from my_app.product.models import PRODUCTS
 product_blueprint = Blueprint('product', __name__)
 
@@ -19,7 +22,7 @@ def full_name_filter(product):
 @product_blueprint.route('/')
 @product_blueprint.route('/home')
 def home():
-    return render_template('home.html', products=PRODUCTS)
+    return render_template('home.html', products=PRODUCTS, timestamp=datetime.now())
 
 @product_blueprint.route('/product/<key>')
 def product(key):
