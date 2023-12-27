@@ -5,7 +5,7 @@ from flask import request, jsonify, Blueprint, render_template, flash, redirect,
 from my_app import db, app
 # from my_app import redis
 from my_app.catalog.models import Product, Category 
-from sqlalchemy.orm.util import join
+from sqlalchemy.orm import join
 
 catalog = Blueprint('catalog', __name__)
 
@@ -50,18 +50,18 @@ def home():
     return {'count': len(products)}
 
 @catalog.route('/product/<id>')
-def product(key):
+def product(id):
     # product = Product.objects.get_or_404(key=key)
     product = Product.query.get_or_404(id)
     product_key = 'product-%s' % product.id
-    redis.set(product_key, product.name)
-    redis.expire(product_key, 600)
+    # redis.set(product_key, product.name)
+    # redis.expire(product_key, 600)
     return 'Product - %s, %s' % (product.name, product.price)
 
 @catalog.route('/products')
 @catalog.route('/products/<int:page>')
 def products(page=1):
-    products = Product.query.paginate(page, 10).items
+    products = Product.query.paginate(page=page, per_page=10)
     # res = {}
     # for product in products:
     #     res [product.id] ={
@@ -78,18 +78,18 @@ def create_product():
     if request.method == 'POST':
         
         name = request.form.get('name')
-        key = request.form.get('key')
         price = request.form.get('price')
         categ_name = request.form.get('category')
         category = Category.query.filter_by(name=categ_name).first()
         if not category:
             category = Category(categ_name)
-        product = Product(name, price)
+        product = Product(name, price, category)
         # product.save()
         db.session.add(product)
         db.session.commit()
-        flash('This product %s has been created' % name, 'success')
-        return redirect(url_for('catalog.product', id=product.id))
+        # flash('This product %s has been created' % name, 'success')
+        # return redirect(url_for('catalog.product', id=product.id))
+        return "Product created successfully"
     return render_template('product-create.html')
 
 @catalog.route('/product-search')
@@ -123,7 +123,7 @@ def create_category():
     db.session.commit()
     return render_template('category.html', category=category)
 
-@catalog.rount('/category/<id>')
+@catalog.route('/category/<id>')
 def category():
     category = Category.query.get_or_404(id)
     return render_template('category.html', category=category)

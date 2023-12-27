@@ -11,12 +11,12 @@ file_path = os.path.abspath(os.getcwd()+'\test.db')
 # create the app
 app = Flask(__name__)
 
-app.secrete.key = 'some_random_number'
+app.secrete_key = 'some_random_number'
 # app.config['MONGODB_SETTINGS'] = {'DB':'my_catalog'}
 # configure the SQLite database, relative to the app instance folder
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
 # initialize the app with the extension
-# db.init_app(app)
+
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -30,6 +30,8 @@ metadata = MetaData(naming_convention=convention)
 
 db = SQLAlchemy(app, metadata=metadata)
 
+# db.init_app(app)
+
 # db.init_all()
 migrate = Migrate(app, db)
 app.debug = True
@@ -37,6 +39,6 @@ app.debug = True
 from my_app.catalog.views import catalog 
 app.register_blueprint(catalog)
 redis = Redis(host='localhost', port=6379)
-with app.app_context():
-    # db.drop_all()
-    db.create_all()
+# with app.app_context():
+#     db.drop_all()
+#     db.create_all()
