@@ -87,9 +87,8 @@ def create_product():
         # product.save()
         db.session.add(product)
         db.session.commit()
-        # flash('This product %s has been created' % name, 'success')
-        # return redirect(url_for('catalog.product', id=product.id))
-        return "Product created successfully"
+        flash('This product %s has been created' % name, 'success')
+        return redirect(url_for('catalog.product', id=product.id))
     return render_template('product-create.html')
 
 @catalog.route('/product-search')
@@ -124,7 +123,7 @@ def create_category():
     return render_template('category.html', category=category)
 
 @catalog.route('/category/<id>')
-def category():
+def category(id):
     category = Category.query.get_or_404(id)
     return render_template('category.html', category=category)
 @catalog.route('/categories')

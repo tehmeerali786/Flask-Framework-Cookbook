@@ -11,7 +11,7 @@ file_path = os.path.abspath(os.getcwd()+'\test.db')
 # create the app
 app = Flask(__name__)
 
-app.secrete_key = 'some_random_number'
+app.secret_key = 'some_random_key'
 # app.config['MONGODB_SETTINGS'] = {'DB':'my_catalog'}
 # configure the SQLite database, relative to the app instance folder
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
