@@ -58,10 +58,10 @@ def home():
 def product(id):
     # product = Product.objects.get_or_404(key=key)
     product = Product.query.get_or_404(id)
-    product_key = 'product-%s' % product.id
+    # product_key = 'product-%s' % product.id
     # redis.set(product_key, product.name)
     # redis.expire(product_key, 600)
-    return 'Product - %s, %s' % (product.name, product.price)
+    return render_template('product.html', product=product)
 
 @catalog.route('/products')
 @catalog.route('/products/<int:page>')
