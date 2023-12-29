@@ -1,8 +1,10 @@
+import os
 from decimal import Decimal
 import redis
 from functools import wraps
+from werkzeug.utils import secure_filename
 from flask import request, jsonify, Blueprint, render_template, flash, redirect, url_for
-from my_app import db, app
+from my_app import db, app, ALLOWED_EXTENSIONS
 from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
 # from my_app import redis
 from sqlalchemy.orm import join
@@ -27,6 +29,9 @@ def template_or_json(template=None):
         
         return decorated_function
     return decorated
+
+def allowed_file(filename):
+    return '.' in filename and filename.lower().rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 @app.errorhandler(404)
@@ -76,16 +81,20 @@ def products(page=1):
 @catalog.route('/product-create', methods=['GET', 'POST'])
 def create_product():
     
-    form = ProductForm(meta={'csrf': False})
-    categories =[(c.id, c.name) for c in Category.query.all()]
-    form.category.choices = categories
+    form = ProductForm()
+    # categories =[(c.id, c.name) for c in Category.query.all()]
+    # form.category.choices = categories
     if form.validate_on_submit():
         
         name = form.name.data
         price = form.price.data
         category = Category.query.get_or_404( form.category.data )
+        image = form.image.data
+        if allowed_file(image.filename):
+            filename = secure_filename(image.filename)
+            image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
         
-        product = Product(name, price, category)
+        product = Product(name, price, category, filename)
         # product.save()
         db.session.add(product)
         db.session.commit()
@@ -120,7 +129,7 @@ def product_search(page=1):
 
 @catalog.route('/create-category', methods=['GET', 'POST'])
 def create_category():
-    form = CategoryForm(meta={'csrf':False})
+    form = CategoryForm()
     if form.validate_on_submit():
         name = form.name.data
         category = Category(name)
