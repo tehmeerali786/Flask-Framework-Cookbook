@@ -5,6 +5,7 @@ from flask_login import LoginManager
 # from flask_mongoengine import MongoEngine
 from flask_sqlalchemy import SQLAlchemy 
 from flask_migrate import Migrate
+from flask_admin import Admin 
 from redis import Redis
 file_path = os.path.abspath(os.getcwd()+'\test.db')
 # create the extension
@@ -38,6 +39,12 @@ app.secret_key = 'SOME_SECRET_KEY'
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
+import my_app.auth.views as views
+admin = Admin(app, index_view=views.MyAdminIndexView())
+# admin.add_view(views.ModelView(views.User, db.session ))
+admin.add_view(views.HelloView(name='Hello'))
+admin.add_view(views.UserAdminView(views.User, db.session))
+
 
 # db.init_app(app)
 
