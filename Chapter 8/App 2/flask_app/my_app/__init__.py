@@ -14,7 +14,7 @@ file_path = os.path.abspath(os.getcwd()+'\test.db')
 app = Flask(__name__)
 
 
-app.config['WTF_CSRF_SECRET_KEY'] = 'SOME_SECRET_KEY'
+app.config['WTF_CSRF_SECRET_KEY'] = 'random key for form'
 # app.config['MONGODB_SETTINGS'] = {'DB':'my_catalog'}
 # configure the SQLite database, relative to the app instance folder
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
@@ -42,7 +42,7 @@ login_manager.login_view = 'auth.login'
 import my_app.auth.views as views
 admin = Admin(app, index_view=views.MyAdminIndexView())
 # admin.add_view(views.ModelView(views.User, db.session ))
-admin.add_view(views.HelloView(name='Hello'))
+# admin.add_view(views.HelloView(name='Hello'))
 admin.add_view(views.UserAdminView(views.User, db.session))
 
 

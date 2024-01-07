@@ -1,13 +1,14 @@
 from functools import wraps
+from werkzeug.security import generate_password_hash
 from flask import request, render_template, flash, redirect, url_for, session, Blueprint, g, abort
 from flask_login import current_user, login_user, logout_user, login_required
 from wtforms import PasswordField 
+from my_app import app, db, login_manager
 from flask_admin import BaseView, expose, AdminIndexView 
 from flask_admin.form import rules 
 from flask_admin.contrib.sqla import ModelView 
 from flask_admin.actions import ActionsMixin 
-from my_app import app, db, login_manager
-from my_app.auth.models import User, RegistrationForm, LoginForm, AdminUserCreateForm, AdminUserUpdateForm
+from my_app.auth.models import User, RegistrationForm, LoginForm, AdminUserCreateForm, AdminUserUpdateForm, generate_password_hash, CKTextAreaField
 
 
 auth = Blueprint('auth', __name__)
@@ -175,36 +176,76 @@ def user_delete_admin(id):
     return redirect(url_for('auth.user_list_admin'))
 
 class MyAdminIndexView(AdminIndexView):
-    def is_accessable(self):
-        return current_user.is_authenticated and current_user.is_admin()
-
-class HelloView(BaseView):
-    @expose('/')
-    def index(self):
-        return self.render('some-template.html')
-    
     def is_accessible(self):
         return current_user.is_authenticated and current_user.is_admin()
+
+# class HelloView(BaseView):
+#     @expose('/')
+#     def index(self):
+#         return self.render('some-template.html')
+    
+#     def is_accessible(self):
+#         return current_user.is_authenticated and current_user.is_admin()
     
     
-class UserAdminView(ModelView):
+class UserAdminView(ModelView, ActionsMixin):
     column_searchable_list = ('username',)
     column_sortable_list = ('username', 'admin')
     column_exclude_list = ('pwdhash',)
     form_exclude_columns = ('pwdhash',)
-    form_edit_rules = ('username', 'admin')
+    form_edit_rules = ('username', 'admin', 'roles', 'notes', 
+                       rules.Header('Reset Password'), 
+                       'new_password', 'confirm')
+    form_create_rules = (
+        'username', 'admin', 'roles', 'notes',  'password'
+        )
+    form_overrides = dict(notes=CKTextAreaField) 
+    
+    create_template = 'edit.html'
+    edit_template = 'edit.html'
 
-    def is_accessable(self):
+    def is_accessible(self):
         return current_user.is_authenticated and current_user.is_admin()     
     
-    def scaffold(self):
+    def scaffold_form(self):
         form_class = super(UserAdminView, self).scaffold_form()
         form_class.password = PasswordField('Password')
+        form_class.new_password = PasswordField('New Password')
+        form_class.confirm = PasswordField('Confirm New Password')
         return form_class
     
     def create_model(self, form):
-        model = self.model(form.username.data, form.password.data, form.admin.data) 
+        if 'C' not in current_user.roles:
+            flash('You are not allowed to create users', 'warning')
+            return 
+        model = self.model(form.username.data, form.password.data, form.admin.data, form.notes.data) 
         form.populate_obj(model)  
         self.session.add(model)
         self._on_model_change(form, model, True)
         self.session.commit()
+        
+    def update_model(self, form, model):
+        if 'U' not in current_user.roles:
+            flash('You are not allowed to edit users.', 'warning')
+            return
+        form.populate_obj(model)
+        if form.new_password.data:
+            if form.new_password.data != form.confirm.data:
+                flash('Passwords must match')
+                return
+            model.pwdhash = generate_password_hash(form.new_password.data)
+        self.session.add(model)
+        self._on_model_change(form, model, False)
+        self.session.commit()
+        
+    def delete_model(self, model):
+        if 'D' not in current_user.roles:
+            flash('You are not allowed to delete users.', 'warning')
+            return 
+        super(UserAdminView, self).delete_model(model)
+        
+    def is_action_allowed(self, name):
+        if name == 'delete' and 'D' not in current_user.roles:
+            flash('You are not allowed to delete users.', 'warning')
+            return False 
+        return True
